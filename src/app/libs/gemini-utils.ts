@@ -3,7 +3,7 @@ import { pipeline } from '@xenova/transformers';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
-// ... EmbeddingPipeline class remains the same ...
+
 class EmbeddingPipeline {
   static task = 'feature-extraction';
   static model = 'Xenova/all-mpnet-base-v2'; // 768-dim model
@@ -20,7 +20,7 @@ class EmbeddingPipeline {
 export async function generateText(prompt: string, retries = 2): Promise<string> {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      // THE FIX IS HERE: Changed to the most stable and universally available model.
+
       const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
       
       const result = await model.generateContent(prompt);
@@ -33,11 +33,10 @@ export async function generateText(prompt: string, retries = 2): Promise<string>
   return "Failed to get a response from the generative model.";
 }
 
-// ... the rest of the file remains exactly the same ...
+
 export async function generateImageDescription(filename: string): Promise<string> {
   const prompt = `Generate a detailed, creative description for an image named "${filename}". Focus on visual elements for search.`;
   const description = await generateText(prompt);
-  console.log("AI-generated description:", description);
   
   if (description.includes("Failed to get a response")) {
     const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
