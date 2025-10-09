@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateImageDescription, generateEmbedding } from '@/app/libs/gemini-utils';
+// --- FIX 1: Import the correct function name ---
+import { generateDescriptionFromImage, generateEmbedding } from '@/app/libs/gemini-utils';
 import { storeImage } from '@/app/libs/db';
 import { addMessage } from '@/app/libs/chat-db';
 
@@ -16,13 +17,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `File is too large. Max size is ${MAX_FILE_SIZE_MB}MB.` }, { status: 400 });
     }
 
+    // These variables are needed for the corrected function call
     const buffer = Buffer.from(await file.arrayBuffer());
-    const imageDataUrl = `data:${file.type};base64,${buffer.toString('base64')}`;
     const uniqueFilename = `image_${Date.now()}.${file.name.split('.').pop()}`;
+    const imageDataUrl = `data:${file.type};base64,${buffer.toString('base64')}`;
 
     await addMessage('user', `Uploaded image: "${file.name}"`, { type: 'upload_request', filename: file.name });
     
-    const description = await generateImageDescription(file.name);
+    // --- FIX 2: Call the new function with the correct arguments (buffer and file type) ---
+    console.log(`👁️ Generating visual description for ${file.name}...`);
+    const description = await generateDescriptionFromImage(buffer, file.type);
+    console.log(`✅ Visual Description: "${description}"`);
+
     const embedding = await generateEmbedding(description);
     const imageId = await storeImage(uniqueFilename, description, embedding, imageDataUrl);
 
@@ -35,6 +41,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, imageId, filename: uniqueFilename, description });
+
   } catch (error) {
     console.error('Upload error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error.';
